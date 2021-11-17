@@ -7,28 +7,30 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
 
-type CaddyConfig struct {
+type SiteConfig struct {
 	Type       utils.ProgramType
 	DomainName string
 	Port       int
+	caddyfile  string
 }
 
-func (c CaddyConfig) CreateConfig(envConfig utils.EnvironmentConfig) (bool, error) {
+func (cfg SiteConfig) CreateConfig(envConfig utils.EnvironmentConfig) (bool, error) {
 	caddyfileNameFormat := "%s.Caddyfile"
 
 	// Set locations
 	sitesAllPath := path.Join(envConfig.CaddySites, "sites-all")
 
 	// Get template path
-	templateName := fmt.Sprintf("template_%s", strings.ToLower(string(c.Type)))
+	templateName := fmt.Sprintf("template_%s", strings.ToLower(string(cfg.Type)))
 	templatePath := path.Join(sitesAllPath, templateName)
 
 	// Create Caddyfile path
-	caddyfileDestinationName := fmt.Sprintf(caddyfileNameFormat, c.DomainName)
+	caddyfileDestinationName := fmt.Sprintf(caddyfileNameFormat, cfg.DomainName)
 	destinationPath := path.Join(sitesAllPath, caddyfileDestinationName)
 
 	if !fileExists(templatePath) {
@@ -47,11 +49,35 @@ func (c CaddyConfig) CreateConfig(envConfig utils.EnvironmentConfig) (bool, erro
 	}
 
 	// Replace vars in template
-	templateSpecific := strings.ReplaceAll(string(template), "$SITE_ADDRESS", c.DomainName)
-	templateSpecific = strings.ReplaceAll(templateSpecific, "$PORT", strconv.Itoa(c.Port))
+	templateSpecific := strings.ReplaceAll(string(template), "$SITE_ADDRESS", cfg.DomainName)
+	templateSpecific = strings.ReplaceAll(templateSpecific, "$PORT", strconv.Itoa(cfg.Port))
 
 	// Write Caddyfile
 	err = ioutil.WriteFile(destinationPath, []byte(templateSpecific), 0775)
+	if err != nil {
+		return false, err
+	}
+
+	cfg.caddyfile = destinationPath
+
+	return true, nil
+}
+
+func (cfg SiteConfig) EnableSite(envConfig utils.EnvironmentConfig) (bool, error) {
+	// Set locations
+	sitesEnabledPath := path.Join(envConfig.CaddySites, "sites-enabled")
+	fileName := filepath.Base(cfg.caddyfile)
+
+	print(fileName)
+
+	// Check, if Caddyfile for this domain exists
+	if fileExists(cfg.caddyfile) {
+		return false, fs.ErrNotExist
+	}
+
+	// Create symlink in sites-enabled
+	err := os.Symlink(cfg.caddyfile, path.Join(sitesEnabledPath, fileName))
+
 	if err != nil {
 		return false, err
 	}

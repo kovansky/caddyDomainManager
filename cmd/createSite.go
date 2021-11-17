@@ -45,25 +45,34 @@ var createSiteCmd = &cobra.Command{
 			return
 		}
 
-		caddyConfig := structs.CaddyConfig{
+		siteConfig := structs.SiteConfig{
 			Type:       utils.ProgramTypePhp,
 			DomainName: strings.ToLower(args[0]),
 		}
 
 		if len(args) > 1 {
-			caddyConfig.Type = utils.GetProgramType(args[1])
+			siteConfig.Type = utils.GetProgramType(args[1])
 		}
 
-		if caddyConfig.Type == utils.ProgramTypeApp {
-			caddyConfig.Port = port
+		if siteConfig.Type == utils.ProgramTypeApp {
+			siteConfig.Port = port
 		}
 
-		if ok, err := caddyConfig.CreateConfig(envConfig); !ok {
+		if ok, err := siteConfig.CreateConfig(envConfig); !ok {
 			if os.IsExist(err) {
-				println(fmt.Sprintf("Config file for domain %s already exists", caddyConfig.DomainName))
+				println(fmt.Sprintf("Config file for domain %s already exists", siteConfig.DomainName))
 				os.Exit(1)
 			} else if os.IsNotExist(err) {
-				println(fmt.Sprintf("Template file for type %s do not exist", strings.ToLower(string(caddyConfig.Type))))
+				println(fmt.Sprintf("Template file for type %s do not exist", strings.ToLower(string(siteConfig.Type))))
+				os.Exit(1)
+			} else {
+				panic(err)
+			}
+		}
+
+		if ok, err := siteConfig.EnableSite(envConfig); !ok {
+			if os.IsNotExist(err) {
+				println(fmt.Sprintf("Caddyfile for domain %s do not exist", strings.ToLower(siteConfig.DomainName)))
 				os.Exit(1)
 			} else {
 				panic(err)
