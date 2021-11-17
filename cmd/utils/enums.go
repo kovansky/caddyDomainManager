@@ -13,18 +13,11 @@ const (
 func GetProgramType(s string) ProgramType {
 	s = strings.ToUpper(s)
 	switch s {
-	case "APP":
-	case "APPLICATION":
-	case "PROXY":
+	case "APP", "APPLICATION", "PROXY":
 		return ProgramTypeApp
-	case "PHP":
-	case "WP":
-	case "WORDPRESS":
+	case "PHP", "WP", "WORDPRESS":
 		return ProgramTypePhp
-	case "HTML":
 	default:
 		return ProgramTypeHtml
 	}
-
-	return ProgramTypeHtml
 }
