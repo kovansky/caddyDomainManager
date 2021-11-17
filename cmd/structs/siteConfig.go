@@ -1,6 +1,7 @@
 package structs
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/kovansky/caddyDomainManager/cmd/utils"
@@ -9,6 +10,7 @@ import (
 	"io/fs"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"strconv"
@@ -97,6 +99,23 @@ func (cfg SiteConfig) EnableSite(envConfig utils.EnvironmentConfig) (bool, error
 	}
 
 	return true, nil
+}
+
+func (cfg SiteConfig) ReloadCaddy() {
+	println("Reloading Caddy...")
+
+	cmd := exec.Command("caddy", "reload")
+
+	var out bytes.Buffer
+	cmd.Stdout = &out
+
+	err := cmd.Run()
+	if err != nil {
+		println(fmt.Sprintf("There was an error while reloading Caddy: %s", err.Error()))
+		return
+	}
+
+	println(out.String())
 }
 
 // Functions regarding file structure

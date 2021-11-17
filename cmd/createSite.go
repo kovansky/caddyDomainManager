@@ -107,16 +107,19 @@ var createSiteCmd = &cobra.Command{
 
 		println(fmt.Sprintf("[%s] Created Caddyfile config in %s using %s template", siteConfig.DomainName, siteConfig.Caddyfile(), strings.ToLower(string(siteConfig.Type))))
 
-		//if ok, err := siteConfig.EnableSite(envConfig); !ok {
-		//	if os.IsNotExist(err) {
-		//		println(fmt.Sprintf("Caddyfile for domain %s do not exist", strings.ToLower(siteConfig.DomainName)))
-		//		os.Exit(1)
-		//	} else {
-		//		panic(err)
-		//	}
-		//}
+		if ok, err := siteConfig.EnableSite(envConfig); !ok {
+			if os.IsNotExist(err) {
+				println(fmt.Sprintf("Caddyfile for domain %s do not exist", strings.ToLower(siteConfig.DomainName)))
+				os.Exit(1)
+			} else {
+				panic(err)
+			}
+		}
 
 		println(fmt.Sprintf("[%s] Created symlink for Caddyfile in sites-enabled directory", siteConfig.DomainName))
+
+		// Reload caddy
+		siteConfig.ReloadCaddy()
 
 		// Database configuration
 		dbType = utils.GetDatabaseType(dbTypeString)
