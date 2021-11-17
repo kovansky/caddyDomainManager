@@ -26,7 +26,8 @@ import (
 )
 
 var (
-	port int
+	port            int
+	forceBaseDomain bool
 )
 
 // createSiteCmd represents the createSite command
@@ -56,6 +57,20 @@ var createSiteCmd = &cobra.Command{
 
 		if siteConfig.Type == utils.ProgramTypeApp {
 			siteConfig.Port = port
+		}
+
+		if forceBaseDomain {
+			siteConfig.ForceBase = true
+		}
+
+		if ok, err := siteConfig.CreateFileStructure(envConfig); !ok {
+			if os.IsNotExist(err) {
+				println(fmt.Sprintf("Warning: template directory for %s type does not exist; omitting file structure copy.", strings.ToLower(string(siteConfig.Type))))
+			} else if err.Error() == "domain directory not empty" {
+				println(fmt.Sprintf("Warning: directory structure for %s already exists and is not empty; omitting file structure copy.", siteConfig.DomainName))
+			} else {
+				panic(err)
+			}
 		}
 
 		if ok, err := siteConfig.CreateConfig(envConfig); !ok {
@@ -90,6 +105,7 @@ func init() {
 	// and all subcommands, e.g.:
 	// createSiteCmd.PersistentFlags().String("foo", "", "A help for foo")
 	createSiteCmd.Flags().IntVarP(&port, "port", "p", 8080, "A port of application behind the proxy")
+	createSiteCmd.Flags().BoolVarP(&forceBaseDomain, "basedomain", "b", false, "Force to treat the domain as high-level, even if contains subdomains")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
