@@ -21,3 +21,23 @@ func GetProgramType(s string) ProgramType {
 		return ProgramTypeHtml
 	}
 }
+
+type DatabaseType string
+
+const (
+	DatabaseMysql DatabaseType = "MYSQL"
+	DatabaseMongo              = "MONGO"
+	DatabaseNone               = ""
+)
+
+func GetDatabaseType(s string) DatabaseType {
+	s = strings.ToUpper(s)
+	switch s {
+	case "MONGO":
+		return DatabaseMongo
+	case "MYSQL":
+		return DatabaseMysql
+	default:
+		return DatabaseNone
+	}
+}

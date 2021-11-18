@@ -150,8 +150,8 @@ func (cfg *SiteConfig) CreateFileStructure(envConfig utils.EnvironmentConfig) (b
 	return true, nil
 }
 
-func (cfg SiteConfig) DomainStructure() []string {
-	if cfg.ForceBase {
+func (cfg SiteConfig) DomainStructure(ignore ...bool) []string {
+	if cfg.ForceBase && (len(ignore) == 0 || ignore[0] == false) {
 		return []string{cfg.DomainName}
 	}
 
@@ -168,6 +168,21 @@ func (cfg SiteConfig) DomainStructure() []string {
 	splitted = splitted[:len(splitted)-1]
 
 	return splitted
+}
+
+func (cfg SiteConfig) WriteDatabaseInfo(username string, password string) bool {
+	// Set location
+	fileName := path.Join(cfg.filesRoot, "database_info.txt")
+
+	content := fmt.Sprintf("Database username: %s, password: %s", username, password)
+
+	// Write to file
+	err := ioutil.WriteFile(fileName, []byte(content), 0775)
+	if err != nil {
+		return false
+	}
+
+	return true
 }
 
 func ReverseSlice(slice []string) []string {

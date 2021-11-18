@@ -18,16 +18,33 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/kovansky/caddyDomainManager/cmd/databases"
 	"github.com/kovansky/caddyDomainManager/cmd/structs"
 	"github.com/kovansky/caddyDomainManager/cmd/utils"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"golang.org/x/term"
 	"os"
+	"strconv"
 	"strings"
+	"syscall"
 )
 
 var (
 	port            int
 	forceBaseDomain bool
+
+	dbTypeString string
+	dbType       utils.DatabaseType
+
+	dbAdminUser     string
+	dbAdminPassword string
+	dbHost          string
+
+	dbUserName     string
+	dbUserPassword string
+	dbUserHost     string
+	dbDatabaseName string
 )
 
 // createSiteCmd represents the createSite command
@@ -85,13 +102,151 @@ var createSiteCmd = &cobra.Command{
 			}
 		}
 
-		if ok, err := siteConfig.EnableSite(envConfig); !ok {
-			if os.IsNotExist(err) {
-				println(fmt.Sprintf("Caddyfile for domain %s do not exist", strings.ToLower(siteConfig.DomainName)))
-				os.Exit(1)
-			} else {
+		//if ok, err := siteConfig.EnableSite(envConfig); !ok {
+		//	if os.IsNotExist(err) {
+		//		println(fmt.Sprintf("Caddyfile for domain %s do not exist", strings.ToLower(siteConfig.DomainName)))
+		//		os.Exit(1)
+		//	} else {
+		//		panic(err)
+		//	}
+		//}
+
+		// Database configuration
+		dbType = utils.GetDatabaseType(dbTypeString)
+		var keysPrefix string
+
+		switch dbType {
+		case utils.DatabaseMongo:
+			keysPrefix = "mongo."
+			break
+		case utils.DatabaseMysql:
+			keysPrefix = "mysql."
+			break
+		}
+
+		if dbType == utils.DatabaseNone {
+			if len(dbTypeString) > 0 {
+				println(fmt.Sprintf("%s is not correct type of database. Please, use 'mysql' or 'mongo'", dbTypeString))
+			}
+		} else {
+			if len(dbAdminUser) == 0 {
+				conf := viper.GetString(keysPrefix + "username")
+				if len(conf) > 0 {
+					dbAdminUser = conf
+				} else {
+					println("You are missing a database admin username (--db-admin, -U).")
+					return
+				}
+			}
+
+			if len(dbAdminPassword) == 0 {
+				conf := viper.GetString(keysPrefix + "password")
+				if len(conf) > 0 {
+					dbAdminPassword = conf
+				} else {
+					println(fmt.Sprintf("Please, provide database password for user %s", dbAdminUser))
+
+					bytePassword, err := term.ReadPassword(int(syscall.Stdin))
+					if err != nil {
+						panic(err)
+						return
+					}
+
+					dbAdminPassword = string(bytePassword)
+				}
+			}
+
+			if len(dbHost) == 0 || dbHost == "127.0.0.1" {
+				conf := viper.GetString(keysPrefix + "host")
+				if len(conf) > 0 && dbHost != "127.0.0.1" {
+					dbHost = conf
+				} else {
+					var port int
+
+					switch dbType {
+					case utils.DatabaseMongo:
+						port = 27017
+						break
+					case utils.DatabaseMysql:
+						port = 3306
+						break
+					}
+
+					dbHost = fmt.Sprintf("127.0.0.1:%d", port)
+				}
+			}
+
+			if len(dbUserName) == 0 {
+				/*
+				   Build user name from domain. I.e. when domain is example.com - username is example.
+				   When domain is test.example.com - username is test_example
+				*/
+				domainParts := siteConfig.DomainStructure(true)
+				dbUserName = strings.Split(strings.Join(domainParts, "_"), ".")[0] // Get rid of TLD
+			}
+
+			if len(dbDatabaseName) == 0 {
+				dbDatabaseName = dbUserName
+			}
+
+			if len(dbUserPassword) == 0 {
+				dbUserPassword = utils.RandomPassword(16)
+				dbUserPassword = utils.RandomPassword(16)
+			}
+
+			if len(dbUserHost) == 0 {
+				dbUserHost = "localhost"
+			}
+
+			splitted := strings.Split(dbHost, ":")
+
+			if len(splitted) != 2 {
+				println(fmt.Sprintf("The host (%s) is in incorrect format - it should be host:port", dbHost))
+				return
+			}
+
+			dbHost = splitted[0]
+			port, err := strconv.Atoi(splitted[1])
+
+			if err != nil {
 				panic(err)
 			}
+
+			// Try to create database
+			var source databases.DatabaseSource
+			switch dbType {
+			case utils.DatabaseMongo:
+
+				break
+			case utils.DatabaseMysql:
+				source = &databases.MysqlSource{
+					User:     dbAdminUser,
+					Password: dbAdminPassword,
+					Host:     dbHost,
+					Port:     port,
+				}
+				break
+			}
+
+			if ok := source.Connect(); !ok {
+				println("There was an error while connecting to the database server")
+				return
+			}
+			defer source.Close()
+
+			if ok := source.CreateDatabase(dbDatabaseName); !ok {
+				println("There was an error while creating the database")
+				return
+			}
+
+			if ok := source.CreateUser(dbUserName, dbUserHost, dbUserPassword); !ok {
+				println("There was an error while creating the database user")
+				return
+			}
+
+			siteConfig.WriteDatabaseInfo(dbUserName, dbUserPassword)
+
+			// ToDo: test with all flags, test with config file, write mongo source
 		}
 	},
 }
@@ -106,6 +261,22 @@ func init() {
 	// createSiteCmd.PersistentFlags().String("foo", "", "A help for foo")
 	createSiteCmd.Flags().IntVarP(&port, "port", "p", 8080, "A port of application behind the proxy")
 	createSiteCmd.Flags().BoolVarP(&forceBaseDomain, "basedomain", "b", false, "Force to treat the domain as high-level, even if contains subdomains")
+
+	createSiteCmd.Flags().StringVarP(&dbTypeString, "db-type", "t", "", "Type of database to use (MySQL or Mongo). If this flag is present an user in corresponding database will be created. Requires providing all other database-related flags.")
+
+	createSiteCmd.Flags().StringVarP(&dbAdminUser, "db-admin", "U", "", "Database administrator username")
+	createSiteCmd.Flags().StringVarP(&dbAdminPassword, "db-admin-password", "P", "", "Database administrator password")
+	createSiteCmd.Flags().StringVarP(&dbHost, "db-host", "H", "127.0.0.1", "Database hostname (with port)")
+
+	createSiteCmd.Flags().StringVarP(&dbUserName, "username", "u", "", "Name of the database user to create. Optional, default extracted from the domain name.")
+	createSiteCmd.Flags().StringVarP(&dbUserPassword, "password", "i", "", "Password of the database user to create. Optional, randomly generated by default.")
+	createSiteCmd.Flags().StringVarP(&dbUserHost, "host", "o", "localhost", "Host to which the database user to create should be limited while connecting. Optional, localhost by default.")
+	createSiteCmd.Flags().StringVarP(&dbDatabaseName, "database", "D", "", "Name of the database to create. Optional, default equal to the username.")
+
+	err := viper.BindPFlag("dbType", createSiteCmd.Flags().Lookup("db-type"))
+	if err != nil {
+		return
+	}
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
