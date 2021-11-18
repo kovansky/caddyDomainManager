@@ -24,6 +24,14 @@ type SiteConfig struct {
 	filesRoot  string
 }
 
+func (cfg SiteConfig) Caddyfile() string {
+	return cfg.caddyfile
+}
+
+func (cfg SiteConfig) FilesRoot() string {
+	return cfg.filesRoot
+}
+
 // Functions regarding Caddy
 
 func (cfg *SiteConfig) CreateConfig(envConfig utils.EnvironmentConfig) (bool, error) {
@@ -170,11 +178,11 @@ func (cfg SiteConfig) DomainStructure(ignore ...bool) []string {
 	return splitted
 }
 
-func (cfg SiteConfig) WriteDatabaseInfo(username string, password string) bool {
+func (cfg SiteConfig) WriteDatabaseInfo(host string, port int, db, username, password, userHost string) bool {
 	// Set location
 	fileName := path.Join(cfg.filesRoot, "database_info.txt")
 
-	content := fmt.Sprintf("Database username: %s, password: %s", username, password)
+	content := fmt.Sprintf("Database address: %s:%d, database name: %s\nUsername: %s, password: %s\nAccess restricted to %s", host, port, db, username, password, userHost)
 
 	// Write to file
 	err := ioutil.WriteFile(fileName, []byte(content), 0775)

@@ -90,6 +90,8 @@ var createSiteCmd = &cobra.Command{
 			}
 		}
 
+		println(fmt.Sprintf("[%s] Created file structure in %s using %s template", siteConfig.DomainName, siteConfig.FilesRoot(), strings.ToLower(string(siteConfig.Type))))
+
 		if ok, err := siteConfig.CreateConfig(envConfig); !ok {
 			if os.IsExist(err) {
 				println(fmt.Sprintf("Config file for domain %s already exists", siteConfig.DomainName))
@@ -102,6 +104,8 @@ var createSiteCmd = &cobra.Command{
 			}
 		}
 
+		println(fmt.Sprintf("[%s] Created Caddyfile config in %s using %s template", siteConfig.DomainName, siteConfig.Caddyfile(), strings.ToLower(string(siteConfig.Type))))
+
 		//if ok, err := siteConfig.EnableSite(envConfig); !ok {
 		//	if os.IsNotExist(err) {
 		//		println(fmt.Sprintf("Caddyfile for domain %s do not exist", strings.ToLower(siteConfig.DomainName)))
@@ -110,6 +114,8 @@ var createSiteCmd = &cobra.Command{
 		//		panic(err)
 		//	}
 		//}
+
+		println(fmt.Sprintf("[%s] Created symlink for Caddyfile in sites-enabled directory", siteConfig.DomainName))
 
 		// Database configuration
 		dbType = utils.GetDatabaseType(dbTypeString)
@@ -239,14 +245,18 @@ var createSiteCmd = &cobra.Command{
 				return
 			}
 
+			println(fmt.Sprintf("[%s] Created database %s in %s server %s:%d", siteConfig.DomainName, dbDatabaseName, strings.ToLower(string(dbType)), dbHost, port))
+
 			if ok := source.CreateUser(dbUserName, dbUserHost, dbUserPassword); !ok {
 				println("There was an error while creating the database user")
 				return
 			}
 
-			siteConfig.WriteDatabaseInfo(dbUserName, dbUserPassword)
+			siteConfig.WriteDatabaseInfo(dbHost, port, dbDatabaseName, dbUserName, dbUserPassword, dbUserHost)
 
-			// ToDo: test with all flags, test with config file, write mongo source
+			println(fmt.Sprintf("[%s] Created user %s (with connection limited to %s) and granted privileges on %s in %s server %s:%d. All required information were stored in database_info.txt file in website's root directory", siteConfig.DomainName, dbUserName, dbUserHost, dbDatabaseName, strings.ToLower(string(dbType)), dbHost, port))
+
+			// ToDo: test with config file, write mongo source
 		}
 	},
 }
