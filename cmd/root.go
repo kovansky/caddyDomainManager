@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"os"
+	"path"
 
 	"github.com/spf13/viper"
 )
@@ -28,9 +29,10 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "caddyDomainManager",
-	Short: "A CLI app to manage your Caddy Server configuration",
-	Long:  `A CLI application that lets you easily create new Caddy sites from existing templates, speeding up the process of adding new domains`,
+	Use:     "caddyDomainManager",
+	Aliases: []string{"cdm"},
+	Short:   "A CLI app to manage your Caddy Server configuration",
+	Long:    `A CLI application that lets you easily create new Caddy sites from existing templates, speeding up the process of adding new domains`,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -63,10 +65,10 @@ func initConfig() {
 		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)
 
-		// Search config in home directory with name ".caddyDomainManager" (without extension).
+		// Search config in home directory with name ".cdm" (without extension).
 		viper.AddConfigPath(home)
 		viper.SetConfigType("yaml")
-		viper.SetConfigName(".caddyDomainManager")
+		viper.SetConfigName(".cdm")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
@@ -74,5 +76,33 @@ func initConfig() {
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
+	} else if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+		sampleViper := viper.New()
+
+		// Find home directory.
+		home, err := os.UserHomeDir()
+		cobra.CheckErr(err)
+
+		sampleViper.AddConfigPath(home)
+		sampleViper.SetConfigType("yaml")
+		sampleViper.SetConfigName(".cdm.sample")
+
+		sampleViper.Set("mysql", map[string]string{
+			"host":     "",
+			"username": "",
+			"password": "",
+		})
+
+		sampleViper.Set("mongo", map[string]string{
+			"host":         "",
+			"username":     "",
+			"password":     "",
+			"authDatabase": "",
+		})
+
+		err = sampleViper.SafeWriteConfig()
+		if err == nil {
+			println(fmt.Sprintf("Created sample config file at %s. You can fill it and rename to .cdm.yaml to make it work.", path.Join(home, ".cdm.sample.yaml")))
+		}
 	}
 }
