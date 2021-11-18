@@ -116,7 +116,11 @@ func (cfg *SiteConfig) CreateFileStructure(envConfig utils.EnvironmentConfig) (b
 	currentDomain := ""
 
 	for index, domain := range domainStructure {
-		currentDomain = fmt.Sprintf("%s.%s", domain, currentDomain)
+		if index > 0 {
+			currentDomain = fmt.Sprintf("%s.%s", domain, currentDomain)
+		} else {
+			currentDomain = domain
+		}
 		addPath := currentDomain
 
 		if index > 0 {
