@@ -241,7 +241,7 @@ var createSiteCmd = &cobra.Command{
 				}
 				break
 			case utils.DatabaseMysql:
-				source = &databases.MongoSource{
+				source = &databases.MysqlSource{
 					User:     dbAdminUser,
 					Password: dbAdminPassword,
 					Host:     dbHost,
