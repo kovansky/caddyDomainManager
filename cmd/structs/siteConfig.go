@@ -179,6 +179,20 @@ func (cfg *SiteConfig) CreateFileStructure(envConfig utils.EnvironmentConfig) (b
 		return false, err
 	}
 
+	indexPath := path.Join(domainRootPath, "public_html", "index.html")
+
+	if fileExists(indexPath) {
+		indexFile, err := ioutil.ReadFile(indexPath)
+
+		if err == nil {
+			// Replace vars in template
+			indexOverwritten := strings.ReplaceAll(string(indexFile), "${DOM}", cfg.DomainName)
+
+			// Write index file
+			_ = ioutil.WriteFile(indexPath, []byte(indexOverwritten), 0775)
+		}
+	}
+
 	return true, nil
 }
 
