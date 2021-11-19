@@ -112,6 +112,7 @@ func (cfg SiteConfig) ReloadCaddy(envConfig utils.EnvironmentConfig) {
 	err := cmd.Run()
 	if err != nil {
 		println(fmt.Sprintf("There was an error while reloading Caddy: %s", err.Error()))
+		println(out.String())
 		return
 	}
 
