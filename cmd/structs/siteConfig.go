@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/fs"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"path"
@@ -229,6 +230,8 @@ func fileExists(filename string) bool {
 
 	if os.IsNotExist(err) {
 		return false
+	} else if err != nil {
+		log.Fatalln(err.Error())
 	}
 
 	return !info.IsDir()
@@ -239,6 +242,8 @@ func directoryExists(path string) bool {
 
 	if os.IsNotExist(err) {
 		return false
+	} else if err != nil {
+		log.Fatalln(err.Error())
 	}
 
 	return info.IsDir()
