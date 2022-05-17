@@ -24,7 +24,6 @@ func (source *PostgresSource) Connect() bool {
 	if err != nil {
 		return false
 	}
-	defer db.Close()
 
 	err = db.Ping()
 	if err != nil {
