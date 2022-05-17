@@ -87,7 +87,7 @@ func (cfg SiteConfig) EnableSite(envConfig utils.EnvironmentConfig) (bool, error
 	fileName := filepath.Base(cfg.caddyfile)
 
 	// Check, if Caddyfile for this domain exists
-	if fileExists(cfg.caddyfile) {
+	if !fileExists(cfg.caddyfile) {
 		return false, fs.ErrNotExist
 	}
 
