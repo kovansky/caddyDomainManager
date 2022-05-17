@@ -11,13 +11,14 @@ type PostgresSource struct {
 	Password string
 	Host     string
 	Port     int
+	AuthDB   string
 
 	db           *sql.DB
 	databaseName string
 }
 
 func (source *PostgresSource) Connect() bool {
-	dsn := fmt.Sprintf("postgres://%s:%s@%s:%d", source.User, source.Password, source.Host, source.Port)
+	dsn := fmt.Sprintf("postgres://%s:%s@%s:%d/%s", source.User, source.Password, source.Host, source.Port, source.AuthDB)
 
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
