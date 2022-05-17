@@ -42,7 +42,7 @@ func (source *MysqlSource) Connect() bool {
 }
 
 func (source MysqlSource) CreateUser(name string, userHost string, password string) bool {
-	_, err := source.db.Exec(fmt.Sprintf("CREATE USER '%s'@'%s' IDENTIFIED BY '%s'", name, userHost, password))
+	_, err := source.db.Exec(fmt.Sprintf("CREATE USER IF NOT EXISTS '%s'@'%s' IDENTIFIED BY '%s'", name, userHost, password))
 	if err != nil {
 		println("1", err.Error())
 		return false
