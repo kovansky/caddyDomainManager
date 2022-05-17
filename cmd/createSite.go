@@ -119,7 +119,7 @@ var createSiteCmd = &cobra.Command{
 		println(fmt.Sprintf("[%s] Created symlink for Caddyfile in sites-enabled directory", siteConfig.DomainName))
 
 		// Reload caddy
-		siteConfig.ReloadCaddy()
+		siteConfig.ReloadCaddy(envConfig.GlobalCaddyfile)
 
 		// Database configuration
 		dbType = utils.GetDatabaseType(dbTypeString)

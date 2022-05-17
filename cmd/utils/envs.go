@@ -3,8 +3,9 @@ package utils
 import "os"
 
 type EnvironmentConfig struct {
-	CaddySites  string
-	ServerFiles string
+	CaddySites      string
+	ServerFiles     string
+	GlobalCaddyfile string
 }
 
 func (envConfig *EnvironmentConfig) ReadEnvironments() (bool, string) {
@@ -12,6 +13,10 @@ func (envConfig *EnvironmentConfig) ReadEnvironments() (bool, string) {
 
 	if ok, envConfig.CaddySites = getEnvNotEmpty("CADDY_SITES_DIR"); !ok {
 		return false, "CADDY_SITES_DIR"
+	}
+
+	if ok, envConfig.CaddySites = getEnvNotEmpty("CADDY_GLOBAL"); !ok {
+		return false, "CADDY_GLOBAL"
 	}
 
 	if ok, envConfig.ServerFiles = getEnvNotEmpty("SERVER_FILES_DIR"); !ok {

@@ -101,10 +101,10 @@ func (cfg SiteConfig) EnableSite(envConfig utils.EnvironmentConfig) (bool, error
 	return true, nil
 }
 
-func (cfg SiteConfig) ReloadCaddy() {
+func (cfg SiteConfig) ReloadCaddy(globalCaddy string) {
 	println("Reloading Caddy...")
 
-	cmd := exec.Command("caddy", "reload")
+	cmd := exec.Command("caddy", "reload", "--config", globalCaddy)
 
 	var out bytes.Buffer
 	cmd.Stdout = &out
