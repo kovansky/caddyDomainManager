@@ -183,6 +183,9 @@ var createSiteCmd = &cobra.Command{
 					case utils.DatabaseMysql:
 						port = 3306
 						break
+					case utils.DatabasePostgres:
+						port = 5432
+						break
 					}
 
 					dbHost = fmt.Sprintf("127.0.0.1:%d", port)
