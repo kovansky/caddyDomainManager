@@ -42,7 +42,7 @@ func (source PostgresSource) CreateUser(name string, _ string, password string) 
 		return false
 	}
 
-	_, err = source.db.Exec(fmt.Sprintf("GRANT ALL ON %s TO %s", source.databaseName, name))
+	_, err = source.db.Exec(fmt.Sprintf("GRANT ALL PRIVILEGES ON DATABASE %s TO %s", source.databaseName, name))
 	if err != nil {
 		println("3", err.Error())
 		return false
