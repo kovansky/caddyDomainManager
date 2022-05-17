@@ -38,6 +38,8 @@ func GetDatabaseType(s string) DatabaseType {
 		return DatabaseMongo
 	case "MYSQL":
 		return DatabaseMysql
+	case "POSTGRES":
+		return DatabasePostgres
 	default:
 		return DatabaseNone
 	}
