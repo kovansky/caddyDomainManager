@@ -132,6 +132,9 @@ var createSiteCmd = &cobra.Command{
 		case utils.DatabaseMysql:
 			keysPrefix = "mysql."
 			break
+		case utils.DatabasePostgres:
+			keysPrefix = "postgres."
+			break
 		}
 
 		if dbType == utils.DatabaseNone {
