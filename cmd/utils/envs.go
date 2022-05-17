@@ -15,7 +15,7 @@ func (envConfig *EnvironmentConfig) ReadEnvironments() (bool, string) {
 		return false, "CADDY_SITES_DIR"
 	}
 
-	if ok, envConfig.CaddySites = getEnvNotEmpty("CADDY_GLOBAL"); !ok {
+	if ok, envConfig.GlobalCaddyfile = getEnvNotEmpty("CADDY_GLOBAL"); !ok {
 		return false, "CADDY_GLOBAL"
 	}
 
