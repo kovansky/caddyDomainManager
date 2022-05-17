@@ -294,7 +294,7 @@ func init() {
 	createSiteCmd.Flags().IntVarP(&port, "port", "p", 8080, "A port of application behind the proxy")
 	createSiteCmd.Flags().BoolVarP(&forceBaseDomain, "basedomain", "b", false, "Force to treat the domain as high-level, even if contains subdomains")
 
-	createSiteCmd.Flags().StringVarP(&dbTypeString, "db-type", "t", "", "Type of database to use (MySQL or Mongo). If this flag is present an user in corresponding database will be created. Requires providing all other database-related flags.")
+	createSiteCmd.Flags().StringVarP(&dbTypeString, "db-type", "t", "", "Type of database to use (MySQL, Postgres or Mongo). If this flag is present an user in corresponding database will be created. Requires providing all other database-related flags.")
 
 	createSiteCmd.Flags().StringVarP(&dbAdminUser, "db-admin", "U", "", "Database administrator username")
 	createSiteCmd.Flags().StringVarP(&dbAdminPassword, "db-admin-password", "P", "", "Database administrator password")
