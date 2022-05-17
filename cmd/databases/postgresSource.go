@@ -3,7 +3,7 @@ package databases
 import (
 	"database/sql"
 	"fmt"
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/jackc/pgx/v4"
 )
 
 type PostgresSource struct {
