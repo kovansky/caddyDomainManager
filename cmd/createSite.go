@@ -248,6 +248,14 @@ var createSiteCmd = &cobra.Command{
 					Port:     port,
 				}
 				break
+			case utils.DatabasePostgres:
+				source = &databases.PostgresSource{
+					User:     dbAdminUser,
+					Password: dbAdminPassword,
+					Host:     dbHost,
+					Port:     port,
+				}
+				break
 			}
 
 			if ok := source.Connect(); !ok {

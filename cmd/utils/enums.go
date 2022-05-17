@@ -25,9 +25,10 @@ func GetProgramType(s string) ProgramType {
 type DatabaseType string
 
 const (
-	DatabaseMysql DatabaseType = "MYSQL"
-	DatabaseMongo              = "MONGO"
-	DatabaseNone               = ""
+	DatabaseMysql    DatabaseType = "MYSQL"
+	DatabaseMongo                 = "MONGO"
+	DatabasePostgres              = "POSTGRES"
+	DatabaseNone                  = ""
 )
 
 func GetDatabaseType(s string) DatabaseType {
